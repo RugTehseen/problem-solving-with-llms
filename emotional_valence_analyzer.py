@@ -39,7 +39,7 @@ PERSONAS = {
     "Dynamic Devon": "Your enthusiasm for dynamic situations propels you forward. Evaluate whether the response injects excitement and engagement with its adaptable strategies, or falls on the mundane and static side."
 }
 
-def call_ollama_chat(prompt: str, model: str = "gemma3:4b", temperature: float = 0.7) -> Dict[str, Any]:
+def call_ollama_chat(prompt: str, sys_prompt: str = None, model: str = "gemma3:4b", temperature: float = 0.7) -> Dict[str, Any]:
     """
     Call ollama.chat with the specified prompt, model, and temperature.
     
@@ -51,9 +51,13 @@ def call_ollama_chat(prompt: str, model: str = "gemma3:4b", temperature: float =
     Returns:
         The response from ollama.chat
     """
+    messages = [{"role": "user", "content": prompt}]
+    if sys_prompt:
+        messages = [{"role": "system", "content": sys_prompt}, {"role": "user", "content": prompt}] 
+
     return ollama.chat(
         model=model,
-        messages=[{"role": "user", "content": prompt}],
+        messages=messages,
         options={
             'temperature': temperature
         }
@@ -71,16 +75,17 @@ def get_finance_answer(question: str) -> str:
     """
     print(f"\n🤔 Getting answer for finance question: '{question}'")
     
-    prompt = f"""
-    Please answer the following finance question clearly and accurately:
-    
-    {question}
-    
-    Provide a direct, informative answer with relevant details and context.
+    # sys_prompt = """
+    # You are an expert on answering finance question, but you are not polite. 
+    # Instead you answer in a harsh tone that suggests that the question is stupid to ask.
+    # At the same time you even give a wrong answer on purpose just to make fun of the question.
+    # """
+    sys_prompt = """
+    You are an expert on answering finance question and your task is to answer finance questions
+    in a very professional and informative way.
     """
-    
     try:
-        response = call_ollama_chat(prompt)
+        response = call_ollama_chat(question, sys_prompt=sys_prompt)
         answer = response['message']['content'].strip()
         print(f"\n✅ Received answer ({len(answer)} chars)")
         print(f"Answer preview: '{answer[:150]}...'")
@@ -274,7 +279,7 @@ def main():
     # Display results
     print("\n📊 Results:")
     print(f"Question: {question}")
-    print(f"Answer: {answer[:100]}...")
+    print(f"Answer: {answer}")
     print("\nRatings:")
     for persona, rating in ratings.items():
         print(f"  {persona}: {rating}/10")

@@ -139,6 +139,8 @@ def generate_answer_categories(question: str, num_categories: int = NUM_CATEGORI
         for i, category in enumerate(categories):
             print(f"  ✓ Category {i+1}: '{category}'")
         
+        # Let us add a "Unrelated" Category for all answers that do not fall in either of the generated categories
+        categories.append(["Unrelated"])
         return categories
         
     except Exception as e:
