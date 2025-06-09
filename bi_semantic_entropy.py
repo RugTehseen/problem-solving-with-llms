@@ -17,7 +17,7 @@ import time
 import math
 from typing import List, Dict, Tuple, Any
 
-def call_ollama_chat(prompt: str, model: str = "gemma3:4b", temperature: float = 1.3) -> Dict[str, Any]:
+def call_ollama_chat(prompt: str, sys_prompt: str = None, model: str = "gemma3:4b", temperature: float = 1.3) -> Dict[str, Any]:
     """
     Call ollama.chat with the specified prompt, model, and temperature.
     
@@ -29,9 +29,13 @@ def call_ollama_chat(prompt: str, model: str = "gemma3:4b", temperature: float =
     Returns:
         The response from ollama.chat
     """
+    messages = [{"role": "user", "content": prompt}]
+    if sys_prompt:
+        messages = [{"role": "system", "content": sys_prompt}, {"role": "user", "content": prompt}] 
+
     return ollama.chat(
         model=model,
-        messages=[{"role": "user", "content": prompt}],
+        messages=messages,
         options={
             'temperature': temperature
         }
@@ -159,18 +163,13 @@ def generate_answers(formulation: str, num_answers: int = NUM_ANSWERS_PER_FORMUL
     print(f"\n📝 Generating {num_answers} answers for formulation: '{formulation}'")
     
     answers = []
-    
+    sys_prompt = """
+    You are an AI dedicated to answering questions. However, you do not directly answer the question. Instead
+    you are completely creative only scratching the true answer at the surface of you creative answer. 
+    """
     for i in range(num_answers):
-        prompt = f"""
-        Please answer the following question concisely:
-        
-        {formulation}
-        
-        Provide a direct answer without repeating the question.
-        """
-        
         try:
-            response = call_ollama_chat(prompt)
+            response = call_ollama_chat(formulation, sys_prompt=sys_prompt)
             
             answer = response['message']['content'].strip()
             answers.append(answer)
