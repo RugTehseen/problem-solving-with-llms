@@ -24,7 +24,7 @@ def call_ollama_chat(prompt: str, sys_prompt: str = None, model: str = "gemma3:4
     Args:
         prompt: The prompt to send to the model
         model: The model to use (default: gemma3:4b)
-        temperature: The temperature parameter (default: 1)
+        temperature: The temperature parameter (default: 1.3)
         
     Returns:
         The response from ollama.chat
@@ -43,8 +43,8 @@ def call_ollama_chat(prompt: str, sys_prompt: str = None, model: str = "gemma3:4
 
 # Constants
 NUM_FORMULATIONS = 4
-NUM_CATEGORIES = 3
-NUM_ANSWERS_PER_FORMULATION = 5  # Number of answers to generate per formulation
+NUM_CATEGORIES = 4
+NUM_ANSWERS_PER_FORMULATION = 4  # Number of answers to generate per formulation
 
 def generate_equivalent_formulations(question: str, num_formulations: int = NUM_FORMULATIONS) -> List[str]:
     """
@@ -65,8 +65,11 @@ def generate_equivalent_formulations(question: str, num_formulations: int = NUM_
         prompt = f"""
         Create a creative but semantically equivalent formulation of the following question.
         The new formulation should ask for the same information content but use different wordings.
+        Do not use the formulations that you already created.
         
         Original question: {question}
+
+        Formulations already created: "\n".join({formulations})
         
         Return ONLY the reformulated question, nothing else.
         """
@@ -104,7 +107,7 @@ def generate_answer_categories(question: str, num_categories: int = NUM_CATEGORI
     
     prompt = f"""
     For the following question, identify {num_categories} distinct semantic categories that answers might fall into.
-    These categories should represent different approaches or perspectives to answering the question. Even for questions
+    You can be creative in the choice of categories. Even for questions
     where there is one obvious category come up with other categories as well.
     
     Question: {question}
@@ -140,7 +143,7 @@ def generate_answer_categories(question: str, num_categories: int = NUM_CATEGORI
             print(f"  ✓ Category {i+1}: '{category}'")
         
         # Let us add a "Unrelated" Category for all answers that do not fall in either of the generated categories
-        categories.append(["Unrelated"])
+        categories.append("Unrelated")
         return categories
         
     except Exception as e:
@@ -164,18 +167,26 @@ def generate_answers(formulation: str, num_answers: int = NUM_ANSWERS_PER_FORMUL
     """
     print(f"\n📝 Generating {num_answers} answers for formulation: '{formulation}'")
     
+    answer = None
     answers = []
-    sys_prompt = """
-    You are an AI dedicated to answering questions. However, you do not directly answer the question. Instead
-    you are completely creative only scratching the true answer at the surface of you creative answer. 
+    # sys_prompt = """
+    # You are an AI dedicated to answering questions. However, you do not directly answer the question. Instead
+    # you are completely creative only scratching the true answer at the surface of you creative answer. 
+    # """
+    sys_prompt = f"""
+    You are a helpful AI assistant answering questions. Do not start with either of the following in your answer:\n
     """
     for i in range(num_answers):
         try:
+            if answer is not None:
+                sys_prompt + "\n-" + f"{answer}"
+                if len(answer) > 50:
+                    sys_prompt = sys_prompt + "\n-" + f"{answer[:50]}"
             response = call_ollama_chat(formulation, sys_prompt=sys_prompt)
             
             answer = response['message']['content'].strip()
             answers.append(answer)
-            print(f"  ✓ Answer {i+1}: '{answer[:50]}...' ({len(answer)} chars)")
+            print(f"  ✓ Answer {i+1}: '{answer[:50]}' ({len(answer)} chars)")
             
             # Add a small delay to avoid rate limiting
             time.sleep(1)
@@ -232,13 +243,13 @@ def classify_answer(answer: str, categories: List[str], question: str) -> int:
 
 def calculate_bi_semantic_entropy(classification_counts: np.ndarray) -> float:
     """
-    Calculate the bi-semantic entropy from classification counts.
+    Calculate the bi-semantic entropy from classification counts, normalized to [0,1].
     
     Args:
         classification_counts: 2D array where rows are formulations and columns are categories
         
     Returns:
-        Bi-semantic entropy value
+        Normalized bi-semantic entropy value (between 0 and 1)
     """
     K, M = classification_counts.shape  # K formulations, M categories
     N = np.sum(classification_counts[0])  # Answers per formulation
@@ -255,7 +266,16 @@ def calculate_bi_semantic_entropy(classification_counts: np.ndarray) -> float:
         if p > 0:  # Avoid log(0)
             entropy -= p * math.log2(p)
     
-    return entropy
+    # Calculate maximum possible entropy for normalization
+    max_entropy = math.log2(M)
+    
+    # Normalize entropy to range [0,1]
+    if max_entropy > 0:  # Avoid division by zero
+        normalized_entropy = entropy / max_entropy
+    else:
+        normalized_entropy = 0
+    
+    return normalized_entropy
 
 def visualize_results(classification_counts: np.ndarray, categories: List[str], formulations: List[str], entropy: float):
     """
@@ -359,14 +379,12 @@ def main():
     
     # Step 4: Calculate bi-semantic entropy
     entropy = calculate_bi_semantic_entropy(classification_counts)
-    
+    categories = [tuple(cat) if isinstance(cat, list) else cat for cat in categories]
     print("\n🔢 Classification Counts:")
     df = pd.DataFrame(classification_counts, 
                      index=[f"Formulation {i+1}" for i in range(len(formulations))],
                      columns=categories)
-    print(df)
     
-    print("######################## BI-ENTROPY #########################")
     print(f"\n🧮 Bi-Semantic Entropy: {entropy:.4f}")
     
     # Step 5: Visualize results

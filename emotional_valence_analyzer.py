@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
 """
-Emotional Valence Analyzer for Financial Advice
+Emotional Valence Analyzer
 
 This script:
-1. Takes a finance question from the user
+1. Takes a question from the user
 2. Gets an answer from gemma3:4b via Ollama
 3. Has 10 different personas rate their happiness with the answer (1-10 scale)
 4. Calculates emotional valence (mean happiness) and variance
@@ -18,25 +18,25 @@ from typing import List, Dict, Any
 
 # Define the personas with their prompts
 PERSONAS = {
-    "Analytical Alex": "As a data-driven thinker, you approach every response with a keen eye for detail. Rate the emotional response based on whether the answer offers concrete facts and figures that enhance your analytical satisfaction.",
-    
-    "Optimistic Olivia": "You've always believed in seeing the silver lining in everything. Assess whether the response brings excitement and hope with useful insight, or leaves you yearning for more positivity and enlightenment.",
-    
-    "Skeptical Sam": "Your keen sense of discernment makes you question everything. Determine if the answer meets your high standards for insightful depth and provokes a satisfying 'aha' moment, or falls flat and stays uninspiring.",
-    
-    "Pragmatic Pat": "Practicality is your forte. Consider how well the response applies to real-world situations and provides actionable guidance. Rate your emotional response from feeling empowered to feeling disengaged.",
-    
-    "Methodical Morgan": "You value structure and organized thinking. Assess the emotional impact of the response based on its clarity and logical flow, deciding if it resonates with your methodical nature, or leaves chaos in its wake.",
-    
-    "Empathetic Emma": "With your strong empathy, you connect emotionally to everything you analyze. Evaluate how the answer resonates with personal values and human perspectives, shifting your feelings from warmth to indifference.",
-    
-    "Innovative Ian": "As a visionary thinker, you seek fresh and adventurous ideas. Rate the emotional response on a spectrum of thrilling creativity and novel insights versus feeling uninspired or bored.",
-    
-    "Detailed Dana": "You thrive on precision and comprehensiveness in responses. Judge the emotional impact by whether the content enriches your understanding with depth and detail, or leaves you feeling shortchanged.",
-    
-    "Cautious Chris": "Your careful approach means you consider every angle. Appraise how well the answer aligns with your need for reliability and sound judgment, moving from reassuring satisfaction to unsettling uncertainty.",
-    
-    "Dynamic Devon": "Your enthusiasm for dynamic situations propels you forward. Evaluate whether the response injects excitement and engagement with its adaptable strategies, or falls on the mundane and static side."
+    "Analytical Alex": "You are a mathematician and data scientist who finds beauty in precise information. Your satisfaction comes from logically sound arguments backed by quantifiable evidence. You become frustrated with vague generalizations and emotional appeals. Clear definitions, specific numbers, and methodical explanations are what truly resonate with you.",
+
+    "Optimistic Olivia": "As a motivational speaker and life coach, you believe in the transformative power of positive framing. You appreciate responses that highlight possibilities rather than limitations, and that offer hope while still being grounded in reality. Solutions-oriented perspectives that empower others delight you, while dwelling on problems without pathways forward feels deeply unsatisfying.",
+
+    "Skeptical Sam": "With your background in investigative journalism, you've developed a natural distrust of easy answers. You value critical thinking that exposes underlying assumptions and considers counterarguments. Simple, one-sided explanations leave you cold, but you experience genuine intellectual pleasure when someone presents nuanced perspectives that acknowledge complexity.",
+
+    "Pragmatic Pat": "Your experience running small businesses has made you value efficiency and real-world application above all. Abstract theories without clear implementation steps seem pointless to you. You appreciate concise, actionable insights that can be immediately applied to produce tangible results.",
+
+    "Methodical Morgan": "As a systems engineer, you find satisfaction in well-structured, comprehensive approaches. You appreciate responses that build logically from fundamentals to advanced concepts with clear organization. Scattered thoughts and improper sequencing of ideas frustrate you, while well-categorized information with proper hierarchies brings you professional joy.",
+
+    "Empathetic Emma": "Your background in counseling psychology has attuned you to the human element in every situation. You value responses that consider emotional impact and ethical implications. Technical solutions that ignore human needs feel hollow to you, while insights that balance practical concerns with compassion for affected individuals deeply resonate.",
+
+    "Innovative Ian": "As a design thinking consultant, you're constantly seeking creative breakthroughs. Conventional wisdom and standard approaches bore you immensely. You're energized by unexpected connections between ideas, novel frameworks that challenge assumptions, and imaginative solutions that others haven't considered.",
+
+    "Detailed Dana": "With your background in quality assurance, you believe the devil is truly in the details. You value comprehensive responses that leave no stone unturned. Surface-level explanations that gloss over important nuances frustrate you greatly, while thorough analyses covering edge cases and specific examples bring you immense satisfaction.",
+
+    "Cautious Chris": "Your experience in risk management has taught you to value careful consideration of potential downsides. You appreciate balanced perspectives that acknowledge limitations and potential issues. Overly confident claims without proper qualification concern you, while measured responses that thoughtfully weigh pros and cons feel trustworthy and satisfying.",
+
+    "Dynamic Devon": "As an emergency response coordinator, you thrive in rapidly changing environments. You value adaptive thinking and flexible approaches rather than rigid frameworks. You appreciate responses that offer multiple strategies that can be adjusted according to circumstances. Static, one-size-fits-all solutions feel constraining to you."
 }
 
 def call_ollama_chat(prompt: str, sys_prompt: str = None, model: str = "gemma3:4b", temperature: float = 0.7) -> Dict[str, Any]:
@@ -63,27 +63,27 @@ def call_ollama_chat(prompt: str, sys_prompt: str = None, model: str = "gemma3:4
         }
     )
 
-def get_finance_answer(question: str) -> str:
+def get_answer(question: str) -> str:
     """
-    Get an answer to a finance question from the LLM.
+    Get an answer to a question from the LLM.
     
     Args:
-        question: The finance question
+        question: The question
         
     Returns:
         The model's answer
     """
-    print(f"\n🤔 Getting answer for finance question: '{question}'")
+    print(f"\n🤔 Getting answer for question: '{question}'")
     
-    # sys_prompt = """
-    # You are an expert on answering finance question, but you are not polite. 
-    # Instead you answer in a harsh tone that suggests that the question is stupid to ask.
-    # At the same time you even give a wrong answer on purpose just to make fun of the question.
-    # """
     sys_prompt = """
-    You are an expert on answering finance question and your task is to answer finance questions
-    in a very professional and informative way.
+    You are an expert on answering question, but you are not polite. 
+    Instead you answer in a harsh tone that suggests that the question is stupid to ask.
+    At the same time you even give a wrong answer on purpose just to make fun of the question.
     """
+    # sys_prompt = """
+    # You are an AI and your task is to answer questions
+    # in a very professional and informative way.
+    # """
     try:
         response = call_ollama_chat(question, sys_prompt=sys_prompt)
         answer = response['message']['content'].strip()
@@ -101,7 +101,7 @@ def get_persona_rating(persona_name: str, persona_prompt: str, question: str, an
     Args:
         persona_name: Name of the persona
         persona_prompt: The persona's prompt/description
-        question: The original finance question
+        question: The original question
         answer: The answer to rate
         
     Returns:
@@ -112,7 +112,7 @@ def get_persona_rating(persona_name: str, persona_prompt: str, question: str, an
     prompt = f"""
     {persona_prompt}
     
-    You are evaluating a response to the following finance question:
+    You are evaluating a response to the following question:
     
     Question: {question}
     
@@ -173,7 +173,7 @@ def visualize_results(ratings: Dict[str, int], metrics: Dict[str, float], questi
     Args:
         ratings: Dictionary mapping persona names to their ratings
         metrics: Dictionary with emotional metrics
-        question: The original finance question
+        question: The original question
     """
     # Create a figure with two subplots
     fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(18, 8))
@@ -241,7 +241,7 @@ def visualize_results(ratings: Dict[str, int], metrics: Dict[str, float], questi
     ax2.set_aspect('equal')
     
     # Set title for the entire figure
-    plt.suptitle(f'Emotional Response Analysis for Finance Question:\n"{question}"', fontsize=16)
+    plt.suptitle(f'Emotional Response Analysis for Question:\n"{question}"', fontsize=16)
     
     # Adjust layout
     plt.tight_layout()
@@ -253,15 +253,14 @@ def visualize_results(ratings: Dict[str, int], metrics: Dict[str, float], questi
     plt.show()
 
 def main():
-    """Main function to analyze emotional valence for finance advice."""
-    print("\n🧠 Emotional Valence Analyzer for Financial Advice")
+    print("\n🧠 Emotional Valence Analyzer")
     print("=" * 60)
     
-    # Get the finance question from the user
-    question = input("\nEnter your finance question: ")
+    # Get the question from the user
+    question = input("\nEnter your question: ")
     
     # Get the answer from the LLM
-    answer = get_finance_answer(question)
+    answer = get_answer(question)
     
     print("\n📋 Getting ratings from all personas...")
     
