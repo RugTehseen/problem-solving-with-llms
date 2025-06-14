@@ -1,6 +1,6 @@
-# Problem Solving with LLMs: Bi-Semantic Entropy and Emotional Valence
+# Solution Quality Analysis App: Bi-Semantic Entropy and Emotional Valence
 
-This repository contains tools for calculating and analyzing bi-semantic entropy and emotional valence using Ollama with the gemma3:4b model.
+This repository contains a Streamlit application for calculating and analyzing bi-semantic entropy and emotional valence using Ollama with the gemma3:4b model. The app provides an interactive interface to explore how different formulations of questions affect answers and how different personas respond emotionally to AI-generated content.
 
 ## What is Bi-Semantic Entropy?
 
@@ -33,13 +33,27 @@ E[VE(A)] = (1/|H|) ∑ VE(A,h)
 The Emotional Variance measures how polarizing an answer is:
 Var(VE(A)) = E[(VE(A) - E[VE(A)])²]
 
+## Streamlit Application
+
+The repository includes a Streamlit web application (`app.py`) that provides a user-friendly interface for both analysis tools:
+
+### Bi-Semantic Entropy Tool
+- Input a question and analyze how different formulations lead to different answer categories
+- Customize the number of formulations and answers per formulation
+- Specify your own custom categories instead of using auto-generated ones
+- Visualize the distribution of answers across categories and calculate entropy
+
+### Emotional Valence Tool
+- Input a question and get an AI-generated answer
+- Customize the system prompt to control how the AI responds (professional, casual, creative, etc.)
+- See how 10 different personas with varying perspectives rate the answer
+- Visualize the emotional valence (average rating) and variance across personas
+
 ## Project Structure
 
-- `bi_semantic_entropy.py`: Main script for calculating bi-semantic entropy
-- `example_bi_semantic_entropy.py`: Example script with a predefined question
-- `emotional_valence_analyzer.py`: Script for analyzing emotional valence of financial advice
-- `test_ollama_setup.py`: Script to verify Ollama installation and model availability
-- `README_bi_semantic_entropy.md`: Detailed documentation for the bi-semantic entropy calculator
+- `app.py`: Streamlit web application providing a GUI for both analysis tools
+- `bi_semantic_entropy.py`: Core implementation of the bi-semantic entropy calculator
+- `emotional_valence_analyzer.py`: Core implementation of the emotional valence analyzer
 - `requirements.txt`: List of required Python packages
 
 ## Prerequisites
@@ -65,6 +79,23 @@ Var(VE(A)) = E[(VE(A) - E[VE(A)])²]
    pip install -r requirements.txt
    ```
 
-4. Test your setup:
-   ```
-   python test_ollama_setup.py
+## Running the Application
+
+Run the Streamlit application with:
+```
+streamlit run app.py
+```
+
+This will start the web server and open the application in your default web browser.
+
+## Features
+
+### Bi-Semantic Entropy Analysis
+- **Custom Categories**: You can now specify your own categories directly in the GUI instead of having them automatically generated
+- **Flexible Configuration**: Adjust the number of question formulations and answers per formulation
+- **Visual Analysis**: View the distribution of answers across categories and the calculated entropy
+
+### Emotional Valence Analysis
+- **Customizable System Prompt**: Control how the AI responds to questions by modifying the system prompt directly in the GUI
+- **Multi-Persona Evaluation**: See how 10 different personas with varying perspectives rate the same answer
+- **Emotional Metrics**: View the calculated emotional valence (mean happiness), variance, and standard deviation
