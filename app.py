@@ -143,7 +143,7 @@ def run_bi_semantic_entropy(question, num_formulations=4, num_answers=4, custom_
         return {"error": str(e)}
 
 # Function to run emotional valence analysis
-def run_emotional_valence(question):
+def run_emotional_valence(question, sys_prompt=None):
     # Redirect standard output to capture print statements
     old_stdout = sys.stdout
     new_stdout = io.StringIO()
@@ -153,7 +153,7 @@ def run_emotional_valence(question):
     
     try:
         # Get the answer from the LLM
-        answer = get_answer(question)
+        answer = get_answer(question, sys_prompt)
         
         # Get ratings from all personas
         ratings = {}
@@ -268,6 +268,16 @@ elif analysis_type == "Emotional Valence":
     # Input form
     with st.form("emotional_valence_form"):
         question = st.text_area("Enter your question:", height=100)
+        
+        # Default professional system prompt
+        default_sys_prompt = """You are an AI and your task is to answer questions
+in a very professional and informative way."""
+        
+        # System prompt input
+        st.write("Customize the AI's system prompt:")
+        sys_prompt = st.text_area("System Prompt", value=default_sys_prompt, height=100,
+                                help="This defines how the AI will respond to the question")
+        
         submit_button = st.form_submit_button("Run Analysis")
     
     # Process when form is submitted
@@ -277,7 +287,7 @@ elif analysis_type == "Emotional Valence":
             st.session_state.log_messages = []
             
             # Run analysis with log container
-            results = run_emotional_valence(question)
+            results = run_emotional_valence(question, sys_prompt)
             
             if "error" in results:
                 st.error(f"Error: {results['error']}")
@@ -308,7 +318,3 @@ elif analysis_type == "Emotional Valence":
                 ratings_df = ratings_df.sort_values("Rating")
                 st.dataframe(ratings_df)
                 
-
-# Footer
-st.markdown("---")
-st.markdown("Created with Streamlit and Ollama")

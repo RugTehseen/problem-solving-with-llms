@@ -63,27 +63,25 @@ def call_ollama_chat(prompt: str, sys_prompt: str = None, model: str = "gemma3:4
         }
     )
 
-def get_answer(question: str) -> str:
+def get_answer(question: str, sys_prompt: str = None) -> str:
     """
     Get an answer to a question from the LLM.
     
     Args:
         question: The question
+        sys_prompt: Optional system prompt to control the AI's response style
         
     Returns:
         The model's answer
     """
     print(f"\n🤔 Getting answer for question: '{question}'")
     
-    sys_prompt = """
-    You are an expert on answering question, but you are not polite. 
-    Instead you answer in a harsh tone that suggests that the question is stupid to ask.
-    At the same time you even give a wrong answer on purpose just to make fun of the question.
-    """
-    # sys_prompt = """
-    # You are an AI and your task is to answer questions
-    # in a very professional and informative way.
-    # """
+    # Use provided system prompt or default to professional one
+    if sys_prompt is None:
+        sys_prompt = """
+        You are an AI and your task is to answer questions
+        in a very professional and informative way.
+        """
     try:
         response = call_ollama_chat(question, sys_prompt=sys_prompt)
         answer = response['message']['content'].strip()
