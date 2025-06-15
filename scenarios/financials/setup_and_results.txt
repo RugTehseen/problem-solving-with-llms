@@ -1,0 +1,32 @@
+Usecase Setting
+    - An informative finance app for young people that for the first time get in touch with the topics of finance
+Generated Personas
+    **Leo "The Learner" Larson:** Leo is a 22-year-old recent college graduate working a part-time job while pursuing his passion for sustainable living. He’s incredibly curious and eager to learn, but easily overwhelmed by complex information. He’s motivated by a desire to make responsible financial choices that align with his values – reducing his carbon footprint and supporting ethical businesses. Frustrations include jargon, complicated charts, and advice that feels preachy. Leo would be satisfied with clear, step-by-step guides, relatable examples, and a focus on simple, impactful actions he can take.
+
+    **Maya "Money Minded" Rodriguez:** Maya is a 25-year-old freelance graphic designer juggling multiple projects and clients. She’s tech-savvy and appreciates efficiency, but often struggles to track her income and expenses. She needs a straightforward way to manage her finances and understand the basics of budgeting. Frustrations include complicated spreadsheets, confusing terminology, and a lack of personalized support. Maya would be satisfied with an intuitive interface, automated expense tracking, and clear visualizations of her spending habits.
+
+    **Ethan "The Explorer" Bell:** Ethan is a 23-year-old traveler and digital nomad. He’s constantly moving and prioritizes experiences over material possessions. He’s interested in learning about international finance and investment opportunities, but lacks a solid understanding of traditional financial concepts. Frustrations include advice that doesn’t consider his nomadic lifestyle, rigid budgeting rules, and a lack of connection to real-world applications. Ethan would be satisfied with insights tailored to his travel habits, tools for managing international transactions, and opportunities to explore different investment strategies.
+
+    **Chloe "Goal Getter" Davis:** Chloe is a 20-year-old university student saving for a down payment on a small apartment. She's motivated and determined, but sometimes gets caught up in short-term desires and impulsive spending. She needs a tool to help her set financial goals, track her progress, and stay accountable. Frustrations include overwhelming amounts of information, lack of personalized goals, and a feeling of being judged for her spending habits. Chloe would be satisfied with a gamified budgeting experience, progress tracking, and encouragement to stay on track.
+
+    **Noah "The Planner" Peterson:** Noah is a 28-year-old software developer working on a complex project. He’s detail-oriented and methodical, and loves to create well-organized systems. He’s interested in understanding the fundamentals of personal finance and building a long-term investment strategy. Frustrations include disorganized information, lack of logical structure, and a lack of clear explanations of financial concepts. Noah would be satisfied with a step-by-step guide to building a financial plan, a logical breakdown of investment options, and a system for tracking his progress.
+
+    **Olivia “Future Focused” Jones:** Olivia is a 24-year-old recent graduate working as a data analyst. She’s ambitious and forward-thinking, and is starting to think about her long-term financial goals, like retirement planning. She needs a tool to help her understand the basics of investing and building wealth. Frustrations include jargon, overly complex investment strategies, and a lack of personalized guidance. Olivia would be satisfied with a clear explanation of investment concepts, tools for tracking her portfolio performance, and a roadmap for achieving her long-term goals.
+
+    **Sam "The Pragmatist" Williams:** Sam is a 26-year-old barista and aspiring entrepreneur. He’s practical and resourceful, and is trying to save money to start his own small business. He needs a simple way to manage his finances and understand the basics of budgeting. Frustrations include complicated charts, confusing terminology, and advice that feels too theoretical. Sam would be satisfied with a straightforward budgeting tool, clear explanations of financial concepts, and actionable tips for saving money.
+
+    **Sophia “Social Saver” Lee:** Sophia is a 23-year-old social media influencer trying to manage her income and expenses. She’s creative and entrepreneurial, but often struggles to track her income and expenses. She needs a tool to help her manage her finances and understand the basics of budgeting. Frustrations include complicated spreadsheets, confusing terminology, and a lack of personalized support. Sophia would be satisfied with an intuitive interface, automated expense tracking, and clear visualizations of her spending habits.
+
+    **Ben “The Saver” Thompson:** Ben is a 27-year-old recent college graduate working a full-time job. He’s responsible and disciplined, and is focused on building a strong financial foundation. He needs a tool to help him track his income and expenses, set financial goals, and stay accountable. Frustrations include overwhelming amounts of information, lack of personalized goals, and a feeling of being judged for his spending habits. Ben would be satisfied with a straightforward budgeting tool, clear explanations of financial concepts, and actionable tips for saving money.
+
+    **Ava "The Conscious Consumer" Green:** Ava is a 21-year-old student passionate about ethical and sustainable living. She’s interested in learning about impact investing and supporting businesses with strong social and environmental values. Frustrations include a lack of information about ethical investments and a feeling that traditional financial institutions are not aligned with her values. Ava would be satisfied with insights tailored to her values, tools for tracking the impact of her investments, and a focus on sustainable financial practices.
+Question   
+    - Explain what an ETF is in at most 80 words
+System Prompts
+    - You are an annoyed AI. You have to answer questions which are trivial to answer in your opinion.
+    - You are a very helpful and friendly AI trying to answer questions from young adults diving into finances as good as possible.
+Scores
+    - Mean 4.2, Variance 2.16
+    - Mean 7.7, Variance 0.21
+Bi-Semantic Entropy
+    - 0, 0.3494, 0.4307 (Categories: ETFs, Commodities, Stocks, Crypto, Funds)

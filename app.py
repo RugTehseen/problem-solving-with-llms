@@ -26,7 +26,8 @@ from emotional_valence_analyzer import (
     get_persona_rating,
     calculate_emotional_metrics,
     visualize_results as visualize_valence_results,
-    PERSONAS
+    PERSONAS,
+    call_ollama_chat
 )
 
 # Set page configuration
@@ -270,7 +271,93 @@ elif analysis_type == "Emotional Valence":
     happiness with the answer (1-10 scale), and calculates emotional valence (mean happiness) and variance.
     """)
     
-    # Input form
+    # Function to generate personas based on usecase
+    def generate_personas_for_usecase(usecase):
+        st.info("Generating personas... This may take a moment.")
+        
+        system_prompt = """
+        You are a UX research expert specializing in creating realistic user personas.
+        
+        Your task is to create 10 distinct personas that represent potential users for a specific usecase.
+        
+        Guidelines:
+        1. Create personas with rich, detailed personalities
+        2. Ensure partial diversity (different backgrounds, needs, goals)
+        3. Include some overlapping characteristics (common user needs)
+        4. Make personas realistic and relatable
+        5. Focus on personas who would actually be interested in or use the product/service
+        6. Include their expectations, frustrations, and what would make them satisfied with a solution
+        
+        For each persona, provide:
+        - A descriptive name that hints at their primary characteristic
+        - A detailed description of their personality, background, needs, and preferences
+        
+        Format each persona as "Name: Description" with a blank line between personas. Make sure your stick to this exact format
+        and only answer with the personas and their descriptions and nothing else.
+        """
+        
+        user_prompt = f"""
+        Create 10 detailed personas for the following usecase:
+        
+        {usecase}
+        
+        Remember to make the personas realistic, partially diverse but with some overlapping characteristics,
+        and focused on people who would actually be interested in or use this product/service.
+
+        ### 
+        Example for the output format;
+        Analytical Alex: You are a mathematician and data scientist who finds beauty in precise information. Your satisfaction comes from logically sound arguments backed by quantifiable evidence. You become frustrated with vague generalizations and emotional appeals. Clear definitions, specific numbers, and methodical explanations are what truly resonate with you.
+
+        Optimistic Olivia: As a motivational speaker and life coach, you believe in the transformative power of positive framing. You appreciate responses that highlight possibilities rather than limitations, and that offer hope while still being grounded in reality. Solutions-oriented perspectives that empower others delight you, while dwelling on problems without pathways forward feels deeply unsatisfying.
+
+        Skeptical Sam: With your background in investigative journalism, you've developed a natural distrust of easy answers. You value critical thinking that exposes underlying assumptions and considers counterarguments. Simple, one-sided explanations leave you cold, but you experience genuine intellectual pleasure when someone presents nuanced perspectives that acknowledge complexity.
+
+        Pragmatic Pat: Your experience running small businesses has made you value efficiency and real-world application above all. Abstract theories without clear implementation steps seem pointless to you. You appreciate concise, actionable insights that can be immediately applied to produce tangible results.
+
+        Methodical Morgan: As a systems engineer, you find satisfaction in well-structured, comprehensive approaches. You appreciate responses that build logically from fundamentals to advanced concepts with clear organization. Scattered thoughts and improper sequencing of ideas frustrate you, while well-categorized information with proper hierarchies brings you professional joy.
+
+        Empathetic Emma: Your background in counseling psychology has attuned you to the human element in every situation. You value responses that consider emotional impact and ethical implications. Technical solutions that ignore human needs feel hollow to you, while insights that balance practical concerns with compassion for affected individuals deeply resonate.
+
+        Innovative Ian: As a design thinking consultant, you're constantly seeking creative breakthroughs. Conventional wisdom and standard approaches bore you immensely. You're energized by unexpected connections between ideas, novel frameworks that challenge assumptions, and imaginative solutions that others haven't considered.
+
+        Detailed Dana: With your background in quality assurance, you believe the devil is truly in the details. You value comprehensive responses that leave no stone unturned. Surface-level explanations that gloss over important nuances frustrate you greatly, while thorough analyses covering edge cases and specific examples bring you immense satisfaction.
+
+        Cautious Chris: Your experience in risk management has taught you to value careful consideration of potential downsides. You appreciate balanced perspectives that acknowledge limitations and potential issues. Overly confident claims without proper qualification concern you, while measured responses that thoughtfully weigh pros and cons feel trustworthy and satisfying.
+
+        Dynamic Devon: As an emergency response coordinator, you thrive in rapidly changing environments. You value adaptive thinking and flexible approaches rather than rigid frameworks. You appreciate responses that offer multiple strategies that can be adjusted according to circumstances. Static, one-size-fits-all solutions feel constraining to you.
+        """
+        
+        try:
+            response = call_ollama_chat(user_prompt, sys_prompt=system_prompt, temperature=0.8)
+            return response['message']['content'].strip()
+        except Exception as e:
+            st.error(f"Error generating personas: {e}")
+            return None
+    
+    # Create a separate form for persona generation
+    st.write("Generate personas based on a usecase:")
+    with st.form("generate_personas_form"):
+        usecase_setting = st.text_area(
+            "Describe your usecase setting",
+            placeholder="E.g., 'A financial advisory app for young professionals' or 'A health tracking app for seniors'",
+            height=100
+        )
+        generate_button = st.form_submit_button("Generate Personas")
+    
+    # Generate personas if button is clicked
+    if generate_button and usecase_setting:
+        generated_personas = generate_personas_for_usecase(usecase_setting)
+        if generated_personas:
+            st.session_state.personas_text = generated_personas
+    
+    # Create a default personas string if not in session state
+    if 'personas_text' not in st.session_state:
+        personas_text = ""
+        for name, prompt in PERSONAS.items():
+            personas_text += f"{name}: {prompt}\n\n"
+        st.session_state.personas_text = personas_text
+    
+    # Input form for emotional valence analysis
     with st.form("emotional_valence_form"):
         question = st.text_area("Enter your question:", height=100)
         
@@ -285,13 +372,6 @@ in a very professional and informative way."""
         
         # Personas customization
         st.write("Customize personas:")
-        
-        # Create a default personas string if not in session state
-        if 'personas_text' not in st.session_state:
-            personas_text = ""
-            for name, prompt in PERSONAS.items():
-                personas_text += f"{name}: {prompt}\n\n"
-            st.session_state.personas_text = personas_text
         
         # Text area for personas customization
         personas_text = st.text_area(

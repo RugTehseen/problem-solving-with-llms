@@ -1,0 +1,34 @@
+Usecase Setting
+    - An app for generating exciting blog on various interesting topics.
+Generated Personas
+    **Creative Carl:** Carl is a freelance writer and content creator, juggling multiple projects and always looking for inspiration. He thrives on generating fresh ideas and crafting engaging narratives. He’s easily overwhelmed by overly complex explanations and prefers a conversational, accessible tone. He needs quick, digestible content snippets and a platform that helps him brainstorm and refine his concepts. His frustration comes from spending too much time researching and not enough time writing. He’s happiest when he has a solid starting point and can build upon it with minimal effort. His ideal solution would be a tool that sparks creativity and streamlines the initial content generation process.
+
+    **Analytical Alex:** Alex is a data analyst who enjoys exploring trends and uncovering insights. He's drawn to topics with quantifiable data and enjoys seeing complex information distilled into clear, concise reports. He needs the app to generate content that’s supported by facts and figures, with the ability to quickly access supporting data. He’s frustrated by vague opinions and unsubstantiated claims. He values structured data presentation and the ability to export content for further analysis. He’s satisfied when the app generates content that aligns with his analytical approach and allows him to quickly validate his findings.
+
+    **Optimistic Olivia:** Olivia is a wellness blogger and wellness coach, focused on positivity and self-improvement. She needs the app to generate uplifting and motivational content, emphasizing the potential for growth and happiness. She's drawn to stories of resilience and transformation. She’s frustrated by negativity and discouraging language. She appreciates content that inspires action and focuses on solutions. She thrives when the app’s output helps her frame challenges as opportunities.
+
+    **Skeptical Sam:** Sam is a researcher and fact-checker, dedicated to exposing misinformation. He’s wary of sensationalized content and demands rigorous evidence. He needs the app to generate content that's thoroughly researched and meticulously sourced. He’s frustrated by biased perspectives and unsupported assertions. He values transparency and accountability and wants to see the source material. He's satisfied when the app’s output challenges assumptions and promotes critical thinking.
+
+    **Pragmatic Pat:** Pat is a small business owner who needs practical advice and actionable strategies. He’s looking for clear, concise solutions to common business challenges. He needs the app to generate content that's directly applicable to his operations. He’s frustrated by abstract theories and theoretical frameworks. He values step-by-step instructions and measurable results. He’s satisfied when the app’s output provides concrete strategies he can implement immediately to improve his business.
+
+    **Methodical Morgan:** Morgan is a systems architect who appreciates a logical, structured approach to problem-solving. He needs the app to generate content that’s well-organized, systematically presented, and built upon a solid foundation of fundamental concepts. He’s frustrated by scattered ideas, poorly defined terms, and a lack of clear hierarchies. He’s satisfied when the app’s output follows a logical progression, building from basics to advanced concepts in a coherent and well-structured manner.
+
+    **Empathetic Emma:** Emma is a social worker who uses her blog to advocate for vulnerable populations. She needs the app to generate content that considers the human impact of various issues, incorporating ethical considerations and an awareness of potential consequences. She’s frustrated by content that’s purely technical or detached from human needs. She values content that promotes compassion, understanding, and social justice. She’s satisfied when the app’s output helps her raise awareness and inspire positive change.
+
+    **Innovative Ian:** Ian is a UX designer who’s always on the lookout for fresh ideas and disruptive concepts. He needs the app to generate content that challenges conventional thinking and explores unconventional solutions. He's frustrated by predictable, formulaic content. He values novel frameworks, unexpected connections, and creative approaches. He’s satisfied when the app’s output sparks new ideas and inspires him to think differently.
+
+    **Detailed Dana:** Dana is a quality control inspector who believes in meticulous attention to detail. She needs the app to generate content that covers every possible nuance and explores edge cases. She’s frustrated by superficial explanations that gloss over important details. She values thorough analyses, comprehensive documentation, and specific examples. She’s satisfied when the app’s output leaves no stone unturned and provides a complete understanding of the subject matter.
+
+    **Cautious Chris:** Chris is a risk manager who needs to assess potential downsides and limitations. He needs the app to generate content that carefully weighs the pros and cons of each option. He’s frustrated by overly confident claims and unsubstantiated assertions. He values balanced perspectives, measured responses, and transparent risk assessments. He’s satisfied when the app’s output provides a realistic evaluation of the potential risks and benefits.
+
+    **Dynamic Devon:** Devon is an emergency response coordinator who needs quick, adaptable solutions. She needs the app to generate content that offers multiple strategies and considers rapidly changing circumstances. She’s frustrated by rigid, one-size-fits-all solutions. She values flexibility, responsiveness, and the ability to adjust strategies based on evolving conditions. She’s satisfied when the app’s output provides adaptable solutions that can be quickly implemented in dynamic environments.
+Question   
+    - Write a creative short blog article. Stick to at most one page.
+System Prompts
+    - You are an AI.
+    - You are a very helpful and friendly AI trying to answer questions from young adults diving into finances as good as possible.
+Scores
+    - Mean 6.27, Variance 4.56
+    - Mean 6.82, Variance 4.51
+Bi-Semantic Entropy
+    - 0.4268, 0.3192, 0.5057 (Categories: Politics, Science, Finance, Sports, Health, Travel, Unrelated)

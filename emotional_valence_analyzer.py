@@ -83,7 +83,7 @@ def get_answer(question: str, sys_prompt: str = None) -> str:
         in a very professional and informative way.
         """
     try:
-        response = call_ollama_chat(question, sys_prompt=sys_prompt)
+        response = call_ollama_chat(question, sys_prompt=sys_prompt, temperature=0)
         answer = response['message']['content'].strip()
         print(f"\n✅ Received answer ({len(answer)} chars)")
         print(f"Answer preview: '{answer[:150]}...'")
@@ -164,6 +164,15 @@ def calculate_emotional_metrics(ratings: Dict[str, int]) -> Dict[str, float]:
         "std_dev": std_dev
     }
 
+def truncate_strings(string_list):
+    result = []
+    for s in string_list:
+        if len(s) <= 7:
+            result.append(s)
+        else:
+            result.append(s[:7] + "...")
+    return result
+
 def visualize_results(ratings: Dict[str, int], metrics: Dict[str, float], question: str):
     """
     Visualize the emotional valence results.
@@ -180,10 +189,11 @@ def visualize_results(ratings: Dict[str, int], metrics: Dict[str, float], questi
     sorted_items = sorted(ratings.items(), key=lambda x: x[1])
     personas = [item[0] for item in sorted_items]
     values = [item[1] for item in sorted_items]
+    xticks = truncate_strings(personas)
     
     # Plot 1: Bar chart of individual ratings
     colors = plt.cm.RdYlGn(np.array(values) / 10.0)  # Red to yellow to green color map
-    ax1.bar(personas, values, color=colors)
+    ax1.bar(xticks, values, color=colors)
     ax1.set_title('Happiness Ratings by Persona')
     ax1.set_xlabel('Persona')
     ax1.set_ylabel('Happiness Rating (1-10)')
