@@ -143,7 +143,7 @@ def run_bi_semantic_entropy(question, num_formulations=4, num_answers=4, custom_
         return {"error": str(e)}
 
 # Function to run emotional valence analysis
-def run_emotional_valence(question, sys_prompt=None):
+def run_emotional_valence(question, sys_prompt=None, custom_personas=None):
     # Redirect standard output to capture print statements
     old_stdout = sys.stdout
     new_stdout = io.StringIO()
@@ -155,9 +155,12 @@ def run_emotional_valence(question, sys_prompt=None):
         # Get the answer from the LLM
         answer = get_answer(question, sys_prompt)
         
+        # Use custom personas if provided, otherwise use default PERSONAS
+        personas_to_use = custom_personas if custom_personas else PERSONAS
+        
         # Get ratings from all personas
         ratings = {}
-        for persona_name, persona_prompt in PERSONAS.items():
+        for persona_name, persona_prompt in personas_to_use.items():
             rating = get_persona_rating(persona_name, persona_prompt, question, answer)
             ratings[persona_name] = rating
             # Add a small delay to avoid rate limiting
@@ -179,7 +182,9 @@ def run_emotional_valence(question, sys_prompt=None):
             "answer": answer,
             "ratings": ratings,
             "metrics": metrics,
-            "output_text": output_text
+            "output_text": output_text,
+            "custom_personas_used": custom_personas is not None,
+            "personas_used": personas_to_use
         }
     
     except Exception as e:
@@ -278,6 +283,56 @@ in a very professional and informative way."""
         sys_prompt = st.text_area("System Prompt", value=default_sys_prompt, height=100,
                                 help="This defines how the AI will respond to the question")
         
+        # Personas customization
+        st.write("Customize personas:")
+        
+        # Create a default personas string if not in session state
+        if 'personas_text' not in st.session_state:
+            personas_text = ""
+            for name, prompt in PERSONAS.items():
+                personas_text += f"{name}: {prompt}\n\n"
+            st.session_state.personas_text = personas_text
+        
+        # Text area for personas customization
+        personas_text = st.text_area(
+            "Enter personas (format: 'Name: Description' with blank line between personas)",
+            value=st.session_state.personas_text,
+            height=300,
+            help="Each persona should be in the format 'Name: Description' with a blank line between personas"
+        )
+        
+        # Store the updated text in session state
+        st.session_state.personas_text = personas_text
+        
+        # Parse the personas text into a dictionary
+        custom_personas = {}
+        current_name = None
+        current_description = []
+        
+        for line in personas_text.split('\n'):
+            line = line.strip()
+            if ':' in line and current_name is None:
+                # Start of a new persona
+                parts = line.split(':', 1)
+                current_name = parts[0].strip()
+                current_description = [parts[1].strip()]
+            elif line == '' and current_name is not None:
+                # End of a persona description
+                custom_personas[current_name] = '\n'.join(current_description)
+                current_name = None
+                current_description = []
+            elif current_name is not None:
+                # Continuation of a persona description
+                current_description.append(line)
+        
+        # Add the last persona if there is one
+        if current_name is not None:
+            custom_personas[current_name] = '\n'.join(current_description)
+        
+        # Display warning if no personas are defined
+        if len(custom_personas) == 0:
+            st.warning("No personas defined. Please add at least one persona in the format 'Name: Description'.")
+        
         submit_button = st.form_submit_button("Run Analysis")
     
     # Process when form is submitted
@@ -287,7 +342,15 @@ in a very professional and informative way."""
             st.session_state.log_messages = []
             
             # Run analysis with log container
-            results = run_emotional_valence(question, sys_prompt)
+            run_analysis = True
+            
+            # Check if we have at least one persona
+            if len(custom_personas) == 0:
+                st.error("You must define at least one persona for the analysis.")
+                run_analysis = False
+            
+            if run_analysis:
+                results = run_emotional_valence(question, sys_prompt, custom_personas)
             
             if "error" in results:
                 st.error(f"Error: {results['error']}")
@@ -317,4 +380,14 @@ in a very professional and informative way."""
                 ratings_df = pd.DataFrame(list(results["ratings"].items()), columns=["Persona", "Rating"])
                 ratings_df = ratings_df.sort_values("Rating")
                 st.dataframe(ratings_df)
+                
+                # Display which personas were used
+                st.subheader("Personas Used")
+                st.info(f"{len(results['personas_used'])} personas were used for this analysis.")
+                
+                # Show persona descriptions in expandable sections
+                personas_used = results.get("personas_used", {})
+                for persona_name, persona_desc in personas_used.items():
+                    with st.expander(f"Persona: {persona_name}"):
+                        st.write(persona_desc)
                 
