@@ -14,6 +14,8 @@ import ollama
 import numpy as np
 import matplotlib.pyplot as plt
 import time
+import pandas as pd
+import os
 from typing import List, Dict, Any
 
 # Define the personas with their prompts
@@ -225,7 +227,7 @@ def visualize_results(ratings: Dict[str, int], metrics: Dict[str, float], questi
         (np.pi/3, 2*np.pi/3), # Yellow (3.67-6.33)
         (2*np.pi/3, np.pi)    # Green (6.33-10)
     ]
-    colors = ['red', 'gold', 'green']
+    colors = ['green', 'gold', 'red']
     
     for (theta_min, theta_max), color in zip(theta_ranges, colors):
         theta_range = np.linspace(theta_min, theta_max, 30)
@@ -259,6 +261,51 @@ def visualize_results(ratings: Dict[str, int], metrics: Dict[str, float], questi
     plt.savefig('emotional_valence_results.png', bbox_inches='tight')
     print("\n📊 Visualization saved as 'emotional_valence_results.png'")
     plt.show()
+
+def save_to_dataframe(sys_prompt: str, ratings: Dict[str, int], metrics: Dict[str, float], usecase_setting: str, csv_path: str = 'emotional_valence_data.csv'):
+    """
+    Save the emotional valence data to a pandas DataFrame and export as CSV.
+    
+    Args:
+        sys_prompt: The system prompt used for the analysis
+        ratings: Dictionary mapping persona names to their ratings
+        metrics: Dictionary with emotional metrics
+        csv_path: Path to save the CSV file
+    """
+    # Create a new row of data
+    data = {'usecase': usecase_setting, 'sys_prompt': sys_prompt}
+    
+    # Add persona ratings
+    for persona, rating in ratings.items():
+        data[f"{persona}_score"] = rating
+    
+    # Add metrics
+    data['mean_valence'] = metrics['valence']
+    data['variance'] = metrics['variance']
+    
+    # Create a DataFrame with the new row
+    new_row_df = pd.DataFrame([data])
+    
+    # Check if the CSV file already exists
+    if os.path.exists(csv_path):
+        # Load existing data and append the new row
+        try:
+            existing_df = pd.read_csv(csv_path)
+            updated_df = pd.concat([existing_df, new_row_df], ignore_index=True)
+            print(f"\n📊 Updating existing CSV file with new data row at '{csv_path}'")
+        except Exception as e:
+            print(f"\n⚠️ Error reading existing CSV: {e}. Creating a new file.")
+            updated_df = new_row_df
+    else:
+        # Create a new CSV file
+        updated_df = new_row_df
+        print(f"\n📊 Creating new CSV file at '{csv_path}'")
+    
+    # Save the DataFrame to CSV
+    updated_df.to_csv(csv_path, index=False)
+    print(f"✅ Data saved successfully to '{csv_path}'")
+    
+    return updated_df
 
 def main():
     print("\n🧠 Emotional Valence Analyzer")
@@ -298,6 +345,10 @@ def main():
     
     # Visualize results
     visualize_results(ratings, metrics, question)
+    
+    # Save data to CSV
+    sys_prompt_to_save = sys_prompt if sys_prompt else "Default professional prompt"
+    save_to_dataframe(sys_prompt_to_save, ratings, metrics)
     
     print("\n✅ Analysis complete!")
 

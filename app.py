@@ -26,6 +26,7 @@ from emotional_valence_analyzer import (
     get_persona_rating,
     calculate_emotional_metrics,
     visualize_results as visualize_valence_results,
+    save_to_dataframe,
     PERSONAS,
     call_ollama_chat
 )
@@ -144,7 +145,7 @@ def run_bi_semantic_entropy(question, num_formulations=4, num_answers=4, custom_
         return {"error": str(e)}
 
 # Function to run emotional valence analysis
-def run_emotional_valence(question, sys_prompt=None, custom_personas=None):
+def run_emotional_valence(question, sys_prompt=None, custom_personas=None, usecase_setting=None):
     # Redirect standard output to capture print statements
     old_stdout = sys.stdout
     new_stdout = io.StringIO()
@@ -173,6 +174,10 @@ def run_emotional_valence(question, sys_prompt=None, custom_personas=None):
         # Visualize results (save to file)
         plt.figure(figsize=(18, 8))
         visualize_valence_results(ratings, metrics, question)
+        
+        # Save data to CSV
+        sys_prompt_to_save = sys_prompt if sys_prompt else "Default professional prompt"
+        save_to_dataframe(sys_prompt_to_save, ratings, metrics, usecase_setting)
         
         # Restore standard output
         sys.stdout = old_stdout
@@ -278,7 +283,7 @@ elif analysis_type == "Emotional Valence":
         system_prompt = """
         You are a UX research expert specializing in creating realistic user personas.
         
-        Your task is to create 10 distinct personas that represent potential users for a specific usecase.
+        Your task is to create 10 or more distinct personas that represent potential users for a specific usecase.
         
         Guidelines:
         1. Create personas with rich, detailed personalities
@@ -430,7 +435,7 @@ in a very professional and informative way."""
                 run_analysis = False
             
             if run_analysis:
-                results = run_emotional_valence(question, sys_prompt, custom_personas)
+                results = run_emotional_valence(question, sys_prompt, custom_personas, usecase_setting)
             
             if "error" in results:
                 st.error(f"Error: {results['error']}")

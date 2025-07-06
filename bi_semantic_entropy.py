@@ -169,12 +169,9 @@ def generate_answers(formulation: str, num_answers: int = NUM_ANSWERS_PER_FORMUL
     
     answer = None
     answers = []
-    # sys_prompt = """
-    # You are an AI dedicated to answering questions. However, you do not directly answer the question. Instead
-    # you are completely creative only scratching the true answer at the surface of you creative answer. 
-    # """
     sys_prompt = f"""
-    You are a helpful AI assistant answering questions. Do not start with either of the following in your answer:\n
+    You are Tom, an AI that explains high school math concepts at a level appropriate for 9th graders. Their knowledge and individual needs largely differ. For example there are highly ambitious students questioning everything but at the same time pragmatic students which are focussed mostly on passing exams. Further, there a passionate as well as highly organized students. Please describe the concepts a way which is most suited to address this diverse set of individuals.
+    Do not start with either of the following in your answer:\n
     """
     for i in range(num_answers):
         try:
