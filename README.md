@@ -37,17 +37,18 @@ Var(VE(A)) = E[(VE(A) - E[VE(A)])²]
 
 The repository includes a Streamlit web application (`app.py`) that provides a user-friendly interface for both analysis tools:
 
-### Bi-Semantic Entropy Tool
-- Input a question and analyze how different formulations lead to different answer categories
-- Customize the number of formulations and answers per formulation
-- Specify your own custom categories instead of using auto-generated ones
-- Visualize the distribution of answers across categories and calculate entropy
-
 ### Emotional Valence Tool
+- Input a use case and generate a diverse group of users
 - Input a question and get an AI-generated answer
 - Customize the system prompt to control how the AI responds (professional, casual, creative, etc.)
-- See how 10 different personas with varying perspectives rate the answer
+- See how the generated personas with varying perspectives rate the answer
 - Visualize the emotional valence (average rating) and variance across personas
+
+### Bi-Semantic Entropy Tool
+- Input a question and analyze how different formulations impact normalized bi-semantic entropy
+- Customize the number of runs, as well as formulations per run and generated answers per formulation
+- Specify your own custom categories an answer might fall into
+- Visualize the distribution of answers across categories and calculate entropy
 
 ## Project Structure
 
@@ -55,12 +56,13 @@ The repository includes a Streamlit web application (`app.py`) that provides a u
 - `bi_semantic_entropy.py`: Core implementation of the bi-semantic entropy calculator
 - `emotional_valence_analyzer.py`: Core implementation of the emotional valence analyzer
 - `requirements.txt`: List of required Python packages
+- `evaluations`: Contains evaluation results for dedicated scenarios that were analyzed
 
 ## Prerequisites
 
 - Python 3.6+
 - Ollama installed with the gemma3:4b model
-- Required Python packages: ollama, pandas, numpy, matplotlib
+- Required Python packages: ollama, pandas, numpy, matplotlib, streamlit
 
 ## Installation
 
@@ -74,7 +76,18 @@ The repository includes a Streamlit web application (`app.py`) that provides a u
    ollama pull gemma3:4b
    ```
 
-3. Install required Python packages:
+3. Create and activate virtual environment
+   ```
+   python -m venv <ENVIRONMENT_NAME>
+   ```
+   ```
+   ENVIRONMENT_NAME\Scripts\activate (Windows) 
+   ``` 
+   ```
+   source ENVIRONMENT_NAME/bin/activate (Unix)
+   ```
+
+4. Install required Python packages:
    ```
    pip install -r requirements.txt
    ```
@@ -87,15 +100,3 @@ streamlit run app.py
 ```
 
 This will start the web server and open the application in your default web browser.
-
-## Features
-
-### Bi-Semantic Entropy Analysis
-- **Custom Categories**: You can now specify your own categories directly in the GUI instead of having them automatically generated
-- **Flexible Configuration**: Adjust the number of question formulations and answers per formulation
-- **Visual Analysis**: View the distribution of answers across categories and the calculated entropy
-
-### Emotional Valence Analysis
-- **Customizable System Prompt**: Control how the AI responds to questions by modifying the system prompt directly in the GUI
-- **Multi-Persona Evaluation**: See how 10 different personas with varying perspectives rate the same answer
-- **Emotional Metrics**: View the calculated emotional valence (mean happiness), variance, and standard deviation
