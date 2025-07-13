@@ -81,10 +81,10 @@ The repository includes a Streamlit web application (`app.py`) that provides a u
    python -m venv <ENVIRONMENT_NAME>
    ```
    ```
-   ENVIRONMENT_NAME\Scripts\activate (Windows) 
+   <ENVIRONMENT_NAME>\Scripts\activate (Windows) 
    ``` 
    ```
-   source ENVIRONMENT_NAME/bin/activate (Unix)
+   source <ENVIRONMENT_NAME>/bin/activate (Unix)
    ```
 
 4. Install required Python packages:
