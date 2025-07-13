@@ -17,6 +17,7 @@ from bi_semantic_entropy import (
     generate_answers,
     classify_answer,
     calculate_bi_semantic_entropy,
+    save_entropy_to_dataframe,
     visualize_results
 )
 
@@ -26,7 +27,7 @@ from emotional_valence_analyzer import (
     get_persona_rating,
     calculate_emotional_metrics,
     visualize_results as visualize_valence_results,
-    save_to_dataframe,
+    save_emotional_valence_to_dataframe,
     PERSONAS,
     call_ollama_chat
 )
@@ -48,15 +49,15 @@ def add_log(message):
 # Main title and description
 st.title("🧠 Solution Quality Analysis App")
 st.markdown("""
-This app provides two different NLP analysis tools:
-- **Bi-Semantic Entropy**: Analyzes the semantic diversity of answers to a question
+This app provides two different LLM analysis tools:
 - **Emotional Valence**: Analyzes the emotional response to an answer
+- **Bi-Semantic Entropy**: Analyzes the semantic diversity of answers to a question
 """)
 
 # Create a sidebar for tool selection
 analysis_type = st.sidebar.radio(
     "Select Analysis Tool",
-    ["Bi-Semantic Entropy", "Emotional Valence"]
+    ["Emotional Valence", "Bi-Semantic Entropy"]
 )
 
 # Custom stdout class to capture and redirect print statements
@@ -79,7 +80,21 @@ class LoggerStdout:
         self.terminal.flush()
 
 # Function to run bi-semantic entropy analysis
-def run_bi_semantic_entropy(question, num_formulations=4, num_answers=4, custom_categories=None):
+def run_bi_semantic_entropy(question, num_formulations=4, num_answers=4, custom_categories=None, sys_prompt=None, num_runs=1):
+    """
+    Run bi-semantic entropy analysis multiple times and save results.
+    
+    Args:
+        question: The question to analyze
+        num_formulations: Number of formulations to generate
+        num_answers: Number of answers per formulation
+        custom_categories: Optional custom categories
+        sys_prompt: Optional system prompt
+        num_runs: Number of times to run the analysis
+        
+    Returns:
+        Dictionary with results
+    """
     # Redirect standard output to capture print statements
     old_stdout = sys.stdout
     new_stdout = io.StringIO()
@@ -87,57 +102,79 @@ def run_bi_semantic_entropy(question, num_formulations=4, num_answers=4, custom_
     logger_stdout = LoggerStdout()
     sys.stdout = logger_stdout
     
+    all_results = []
+    
     try:
-        # Step 1: Generate semantically equivalent formulations
-        formulations = generate_equivalent_formulations(question, num_formulations)
-        
-        # Step 2: Use custom categories or generate semantic answer categories
-        if custom_categories:
-            # Use custom categories provided by the user
-            categories = custom_categories
+        for run_id in range(1, num_runs + 1):
+            print(f"\n🔄 Starting run {run_id}/{num_runs}")
             
-            print(f"\n🏷️ Using {len(categories)} custom categories:")
-            for i, category in enumerate(categories):  # Skip the "Unrelated" category in the log
-                print(f"  ✓ Category {i+1}: '{category}'")
-        else:
-            # Generate semantic answer categories
-            categories = generate_answer_categories(question, num_categories=5)
-        
-        # Step 3: Generate answers for each formulation and classify them
-        classification_counts = np.zeros((len(formulations), len(categories)), dtype=int)
-        
-        for i, formulation in enumerate(formulations):
-            # Generate answers
-            answers = generate_answers(formulation, num_answers)
+            # Step 1: Generate semantically equivalent formulations
+            formulations = generate_equivalent_formulations(question, num_formulations)
             
-            # Classify answers
-            for j, answer in enumerate(answers):
-                category_idx = classify_answer(answer, categories, question)
-                classification_counts[i, category_idx] += 1
-        
-        # Step 4: Calculate bi-semantic entropy
-        entropy = calculate_bi_semantic_entropy(classification_counts)
-        
-        # Step 5: Visualize results (save to file)
-        plt.figure(figsize=(18, 8))
-        visualize_results(classification_counts, categories, formulations, entropy)
-        
-        # Create a DataFrame for display
-        df = pd.DataFrame(classification_counts,
-                         index=[f"Formulation {i+1}" for i in range(len(formulations))],
-                         columns=categories)
+            # Step 2: Use custom categories or generate semantic answer categories
+            if custom_categories:
+                # Use custom categories provided by the user
+                categories = custom_categories
+                
+                print(f"\n🏷️ Using {len(categories)} custom categories:")
+                for i, category in enumerate(categories):  # Skip the "Unrelated" category in the log
+                    print(f"  ✓ Category {i+1}: '{category}'")
+            else:
+                # Generate semantic answer categories
+                categories = generate_answer_categories(question, num_categories=5)
+            
+            # Step 3: Generate answers for each formulation and classify them
+            classification_counts = np.zeros((len(formulations), len(categories)), dtype=int)
+            
+            for i, formulation in enumerate(formulations):
+                # Generate answers with the provided system prompt
+                answers = generate_answers(formulation, num_answers, sys_prompt)
+                
+                # Classify answers
+                for j, answer in enumerate(answers):
+                    category_idx = classify_answer(answer, categories, question)
+                    classification_counts[i, category_idx] += 1
+            
+            # Step 4: Calculate bi-semantic entropy
+            entropy = calculate_bi_semantic_entropy(classification_counts)
+            
+            # Step 5: Visualize results (save to file)
+            plt.figure(figsize=(18, 8))
+            visualize_results(classification_counts, categories, formulations, entropy)
+            
+            # Save the visualization with run number
+            plt.savefig(f'bi_semantic_entropy_results_run_{run_id}.png', bbox_inches='tight')
+            
+            # Create a DataFrame for display
+            df = pd.DataFrame(classification_counts,
+                             index=[f"Formulation {i+1}" for i in range(len(formulations))],
+                             columns=categories)
+            
+            # Save results to CSV
+            save_entropy_to_dataframe(question, sys_prompt, run_id, formulations, categories, classification_counts, entropy)
+            
+            # Store results for this run
+            run_result = {
+                "run_id": run_id,
+                "formulations": formulations,
+                "categories": categories,
+                "classification_counts": classification_counts,
+                "entropy": entropy,
+                "dataframe": df
+            }
+            
+            all_results.append(run_result)
+            
+            print(f"\n✅ Run {run_id}/{num_runs} completed with entropy: {entropy:.4f}")
         
         # Restore standard output
         sys.stdout = old_stdout
         output_text = new_stdout.getvalue()
         
         return {
-            "formulations": formulations,
-            "categories": categories,
-            "classification_counts": classification_counts,
-            "entropy": entropy,
+            "all_results": all_results,
             "output_text": output_text,
-            "dataframe": df
+            "num_runs": num_runs
         }
     
     except Exception as e:
@@ -176,8 +213,8 @@ def run_emotional_valence(question, sys_prompt=None, custom_personas=None, useca
         visualize_valence_results(ratings, metrics, question)
         
         # Save data to CSV
-        sys_prompt_to_save = sys_prompt if sys_prompt else "Default professional prompt"
-        save_to_dataframe(sys_prompt_to_save, ratings, metrics, usecase_setting)
+        sys_prompt_to_save = sys_prompt if sys_prompt else ""
+        save_emotional_valence_to_dataframe(sys_prompt_to_save, ratings, metrics)
         
         # Restore standard output
         sys.stdout = old_stdout
@@ -214,8 +251,19 @@ if analysis_type == "Bi-Semantic Entropy":
         col1, col2 = st.columns(2)
         with col1:
             num_formulations = st.slider("Number of formulations:", 2, 6, 4)
+            num_runs = st.slider("Number of runs:", 1, 10, 1, help="How many times to run the analysis")
         with col2:
             num_answers = st.slider("Answers per formulation:", 2, 6, 4)
+        
+        # Default system prompt
+        default_sys_prompt = """
+        You are Tobi, an experienced journalist known for creating impactful blog articles. You take research very seriously, in the sense that you fully want to explore the nuances and various aspects relevant to the current blog that you are writing. Further, you are targeting a rather diverse group of readers ranging from the scientifically interested to the travel enthusiast.
+        """
+        
+        # System prompt input
+        st.write("Customize the AI's system prompt:")
+        sys_prompt = st.text_area("System Prompt", value=default_sys_prompt, height=100,
+                                help="This defines how the AI will respond to the question")
         
         custom_categories = None
         st.write("Enter your custom categories (one per line):")
@@ -227,7 +275,7 @@ if analysis_type == "Bi-Semantic Entropy":
     
     # Process when form is submitted
     if submit_button and question:
-        with st.spinner("Running bi-semantic entropy analysis... This may take a few minutes."):
+        with st.spinner(f"Running bi-semantic entropy analysis {num_runs} times... This may take a few minutes."):
             # Clear previous log messages
             st.session_state.log_messages = []
             
@@ -236,7 +284,9 @@ if analysis_type == "Bi-Semantic Entropy":
                 question,
                 num_formulations,
                 num_answers,
-                custom_categories=custom_categories if custom_categories else None
+                custom_categories=custom_categories if custom_categories else None,
+                sys_prompt=sys_prompt,
+                num_runs=num_runs
             )
             
             if "error" in results:
@@ -245,26 +295,47 @@ if analysis_type == "Bi-Semantic Entropy":
                 # Display results
                 st.subheader("Results")
                 
-                # Display the entropy value
-                st.metric("Bi-Semantic Entropy", f"{results['entropy']:.4f}")
+                # Create tabs for each run
+                tabs = st.tabs([f"Run {i+1}" for i in range(results["num_runs"])])
                 
-                # Display the visualization
-                if os.path.exists("bi_semantic_entropy_results.png"):
-                    st.image("bi_semantic_entropy_results.png", use_container_width=True)
+                for i, tab in enumerate(tabs):
+                    run_result = results["all_results"][i]
+                    
+                    with tab:
+                        # Display the entropy value
+                        st.metric("Bi-Semantic Entropy", f"{run_result['entropy']:.4f}")
+                        
+                        # Display the visualization
+                        run_id = i + 1
+                        if os.path.exists(f"bi_semantic_entropy_results_run_{run_id}.png"):
+                            st.image(f"bi_semantic_entropy_results_run_{run_id}.png", use_container_width=True)
+                        
+                        # Display the classification counts
+                        st.subheader("Classification Counts")
+                        st.dataframe(run_result["dataframe"])
+                        
+                        # Display formulations
+                        st.subheader("Question Formulations")
+                        for j, form in enumerate(run_result["formulations"]):
+                            st.write(f"**Formulation {j+1}:** {form}")
+                        
+                        # Display categories
+                        st.subheader("Semantic Categories")
+                        for j, cat in enumerate(run_result["categories"]):
+                            st.write(f"**Category {j+1}:** {cat}")
                 
-                # Display the classification counts
-                st.subheader("Classification Counts")
-                st.dataframe(results["dataframe"])
+                # Display a summary of all runs
+                st.subheader("Summary of All Runs")
+                summary_data = {
+                    "Run": [i+1 for i in range(results["num_runs"])],
+                    "Entropy": [run["entropy"] for run in results["all_results"]]
+                }
+                summary_df = pd.DataFrame(summary_data)
+                st.dataframe(summary_df)
                 
-                # Display formulations
-                st.subheader("Question Formulations")
-                for i, form in enumerate(results["formulations"]):
-                    st.write(f"**Formulation {i+1}:** {form}")
-                
-                # Display categories
-                st.subheader("Semantic Categories")
-                for i, cat in enumerate(results["categories"]):
-                    st.write(f"**Category {i+1}:** {cat}")
+                # Display a link to the CSV file
+                if os.path.exists("bi_semantic_entropy_data.csv"):
+                    st.success("Results have been saved to 'bi_semantic_entropy_data.csv'")
                 
 
 elif analysis_type == "Emotional Valence":

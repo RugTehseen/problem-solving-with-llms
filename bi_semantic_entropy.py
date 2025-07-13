@@ -15,6 +15,7 @@ import matplotlib.pyplot as plt
 import ollama
 import time
 import math
+import os
 from typing import List, Dict, Tuple, Any
 
 def call_ollama_chat(prompt: str, sys_prompt: str = None, model: str = "gemma3:4b", temperature: float = 1.3) -> Dict[str, Any]:
@@ -154,13 +155,14 @@ def generate_answer_categories(question: str, num_categories: int = NUM_CATEGORI
             print(f"  ✓ Default Category {i+1}: '{category}'")
         return categories
 
-def generate_answers(formulation: str, num_answers: int = NUM_ANSWERS_PER_FORMULATION) -> List[str]:
+def generate_answers(formulation: str, num_answers: int = NUM_ANSWERS_PER_FORMULATION, sys_prompt: str = None) -> List[str]:
     """
     Generate answers for a given question formulation.
     
     Args:
         formulation: The question formulation
         num_answers: Number of answers to generate
+        sys_prompt: Optional system prompt to control the AI's response style
         
     Returns:
         List of generated answers
@@ -169,21 +171,21 @@ def generate_answers(formulation: str, num_answers: int = NUM_ANSWERS_PER_FORMUL
     
     answer = None
     answers = []
-    sys_prompt = f"""
-    You are Tom, an AI that explains high school math concepts at a level appropriate for 9th graders. Their knowledge and individual needs largely differ. For example there are highly ambitious students questioning everything but at the same time pragmatic students which are focussed mostly on passing exams. Further, there a passionate as well as highly organized students. Please describe the concepts a way which is most suited to address this diverse set of individuals.
-    Do not start with either of the following in your answer:\n
-    """
+    
+    # Use provided system prompt or default to the blog writer prompt
+    if sys_prompt is None:
+        sys_prompt = ""
     for i in range(num_answers):
         try:
             if answer is not None:
                 sys_prompt + "\n-" + f"{answer}"
                 if len(answer) > 50:
                     sys_prompt = sys_prompt + "\n-" + f"{answer[:50]}"
-            response = call_ollama_chat(formulation, sys_prompt=sys_prompt)
+            response = call_ollama_chat(formulation, sys_prompt=sys_prompt, temperature=0)
             
             answer = response['message']['content'].strip()
             answers.append(answer)
-            print(f"  ✓ Answer {i+1}: '{answer[:50]}' ({len(answer)} chars)")
+            print(f"  ✓ Answer {i+1}: '{answer[:250]}' ({len(answer)} chars)")
             
             # Add a small delay to avoid rate limiting
             time.sleep(1)
@@ -221,7 +223,7 @@ def classify_answer(answer: str, categories: List[str], question: str) -> int:
     """
     
     try:
-        response = call_ollama_chat(prompt)
+        response = call_ollama_chat(prompt, temperature=0)
         
         content = response['message']['content'].strip()
         
@@ -326,66 +328,59 @@ def visualize_results(classification_counts: np.ndarray, categories: List[str], 
     print("\n📊 Visualization saved as 'bi_semantic_entropy_results.png'")
     plt.show()
 
-def main():
-    """Main function to calculate bi-semantic entropy."""
-    parser = argparse.ArgumentParser(description='Calculate bi-semantic entropy for a question.')
-    parser.add_argument('--question', type=str, help='Input question')
-    parser.add_argument('--formulations', type=int, default=NUM_FORMULATIONS, 
-                        help=f'Number of question formulations (default: {NUM_FORMULATIONS})')
-    parser.add_argument('--categories', type=int, default=NUM_CATEGORIES, 
-                        help=f'Number of semantic categories (default: {NUM_CATEGORIES})')
-    parser.add_argument('--answers', type=int, default=NUM_ANSWERS_PER_FORMULATION, 
-                        help=f'Number of answers per formulation (default: {NUM_ANSWERS_PER_FORMULATION})')
+def save_entropy_to_dataframe(question: str, sys_prompt: str, run_id: int, formulations: List[str],
+                     categories: List[str], classification_counts: np.ndarray, entropy: float,
+                     csv_path: str = 'bi_semantic_entropy_data.csv'):
+    """
+    Save the bi-semantic entropy data to a pandas DataFrame and export as CSV.
     
-    args = parser.parse_args()
+    Args:
+        question: The original question
+        sys_prompt: The system prompt used
+        run_id: The run identifier
+        formulations: List of question formulations
+        categories: List of semantic categories
+        classification_counts: 2D array of classification counts
+        entropy: The calculated bi-semantic entropy
+        csv_path: Path to save the CSV file
+    """
+    # Create a new row of data
+    data = {
+        'question': question,
+        'sys_prompt': sys_prompt,
+        'run_id': run_id,
+        'timestamp': time.strftime('%Y-%m-%d %H:%M:%S'),
+        'formulations': len(formulations),
+        'answers_per_formulation': classification_counts.sum() // len(formulations),
+        'entropy': entropy
+    }
     
-    # Get the question from command line or prompt the user
-    question = args.question
-    if not question:
-        question = input("Enter your question: ")
+    # Add category names and counts
+    global_counts = np.sum(classification_counts, axis=0)
+    for i, category in enumerate(categories):
+        data[f'category_{i+1}'] = category
+        data[f'category_{i+1}_count'] = global_counts[i]
     
-    print("\n🧠 Bi-Semantic Entropy Calculator")
-    print("=" * 50)
-    print(f"Question: {question}")
-    print(f"Formulations: {args.formulations}")
-    print(f"Categories: {args.categories}")
-    print(f"Answers per formulation: {args.answers}")
-    print("=" * 50)
+    # Create a DataFrame with the new row
+    new_row_df = pd.DataFrame([data])
     
-    # Step 1: Generate semantically equivalent formulations
-    formulations = generate_equivalent_formulations(question, args.formulations)
+    # Check if the CSV file already exists
+    if os.path.exists(csv_path):
+        # Load existing data and append the new row
+        try:
+            existing_df = pd.read_csv(csv_path)
+            updated_df = pd.concat([existing_df, new_row_df], ignore_index=True)
+            print(f"\n📊 Updating existing CSV file with new data row at '{csv_path}'")
+        except Exception as e:
+            print(f"\n⚠️ Error reading existing CSV: {e}. Creating a new file.")
+            updated_df = new_row_df
+    else:
+        # Create a new CSV file
+        updated_df = new_row_df
+        print(f"\n📊 Creating new CSV file at '{csv_path}'")
     
-    # Step 2: Generate semantic answer categories
-    categories = generate_answer_categories(question, args.categories)
+    # Save the DataFrame to CSV
+    updated_df.to_csv(csv_path, index=False)
+    print(f"✅ Data saved successfully to '{csv_path}'")
     
-    # Step 3: Generate answers for each formulation and classify them
-    classification_counts = np.zeros((len(formulations), len(categories)), dtype=int)
-    
-    for i, formulation in enumerate(formulations):
-        print(f"\n📋 Processing formulation {i+1}/{len(formulations)}: '{formulation}'")
-        
-        # Generate answers
-        answers = generate_answers(formulation, args.answers)
-        
-        # Classify answers
-        print(f"\n🔍 Classifying answers for formulation {i+1}...")
-        for j, answer in enumerate(answers):
-            category_idx = classify_answer(answer, categories, question)
-            classification_counts[i, category_idx] += 1
-            print(f"  ✓ Answer {j+1} classified as: '{categories[category_idx]}'")
-    
-    # Step 4: Calculate bi-semantic entropy
-    entropy = calculate_bi_semantic_entropy(classification_counts)
-    categories = [tuple(cat) if isinstance(cat, list) else cat for cat in categories]
-    print("\n🔢 Classification Counts:")
-    df = pd.DataFrame(classification_counts, 
-                     index=[f"Formulation {i+1}" for i in range(len(formulations))],
-                     columns=categories)
-    
-    print(f"\n🧮 Bi-Semantic Entropy: {entropy:.4f}")
-    
-    # Step 5: Visualize results
-    visualize_results(classification_counts, categories, formulations, entropy)
-
-if __name__ == "__main__":
-    main()
+    return updated_df

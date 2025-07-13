@@ -79,11 +79,8 @@ def get_answer(question: str, sys_prompt: str = None) -> str:
     print(f"\n🤔 Getting answer for question: '{question}'")
     
     # Use provided system prompt or default to professional one
-    if sys_prompt is None:
-        sys_prompt = """
-        You are an AI and your task is to answer questions
-        in a very professional and informative way.
-        """
+    if not sys_prompt:
+        sys_prompt = ""
     try:
         response = call_ollama_chat(question, sys_prompt=sys_prompt, temperature=0)
         answer = response['message']['content'].strip()
@@ -124,7 +121,7 @@ def get_persona_rating(persona_name: str, persona_prompt: str, question: str, an
     """
     
     try:
-        response = call_ollama_chat(prompt)
+        response = call_ollama_chat(prompt, temperature=0)
         content = response['message']['content'].strip()
         
         # Extract the rating number
@@ -262,7 +259,7 @@ def visualize_results(ratings: Dict[str, int], metrics: Dict[str, float], questi
     print("\n📊 Visualization saved as 'emotional_valence_results.png'")
     plt.show()
 
-def save_to_dataframe(sys_prompt: str, ratings: Dict[str, int], metrics: Dict[str, float], usecase_setting: str, csv_path: str = 'emotional_valence_data.csv'):
+def save_emotional_valence_to_dataframe(sys_prompt: str, ratings: Dict[str, int], metrics: Dict[str, float], csv_path: str = 'emotional_valence_data.csv'):
     """
     Save the emotional valence data to a pandas DataFrame and export as CSV.
     
@@ -273,7 +270,7 @@ def save_to_dataframe(sys_prompt: str, ratings: Dict[str, int], metrics: Dict[st
         csv_path: Path to save the CSV file
     """
     # Create a new row of data
-    data = {'usecase': usecase_setting, 'sys_prompt': sys_prompt}
+    data = {'sys_prompt': sys_prompt}
     
     # Add persona ratings
     for persona, rating in ratings.items():
@@ -306,51 +303,3 @@ def save_to_dataframe(sys_prompt: str, ratings: Dict[str, int], metrics: Dict[st
     print(f"✅ Data saved successfully to '{csv_path}'")
     
     return updated_df
-
-def main():
-    print("\n🧠 Emotional Valence Analyzer")
-    print("=" * 60)
-    
-    # Get the question from the user
-    question = input("\nEnter your question: ")
-    
-    # Get the answer from the LLM
-    answer = get_answer(question)
-    
-    print("\n📋 Getting ratings from all personas...")
-    
-    # Get ratings from all personas
-    ratings = {}
-    for persona_name, persona_prompt in PERSONAS.items():
-        rating = get_persona_rating(persona_name, persona_prompt, question, answer)
-        ratings[persona_name] = rating
-        # Add a small delay to avoid rate limiting
-        time.sleep(1)
-    
-    # Calculate emotional metrics
-    metrics = calculate_emotional_metrics(ratings)
-    
-    # Display results
-    print("\n📊 Results:")
-    print(f"Question: {question}")
-    print(f"Answer: {answer}")
-    print("\nRatings:")
-    for persona, rating in ratings.items():
-        print(f"  {persona}: {rating}/10")
-    
-    print("\nEmotional Metrics:")
-    print(f"  Valence (Mean Happiness): {metrics['valence']:.2f}/10")
-    print(f"  Variance: {metrics['variance']:.2f}")
-    print(f"  Standard Deviation: {metrics['std_dev']:.2f}")
-    
-    # Visualize results
-    visualize_results(ratings, metrics, question)
-    
-    # Save data to CSV
-    sys_prompt_to_save = sys_prompt if sys_prompt else "Default professional prompt"
-    save_to_dataframe(sys_prompt_to_save, ratings, metrics)
-    
-    print("\n✅ Analysis complete!")
-
-if __name__ == "__main__":
-    main()

@@ -1,0 +1,21 @@
+Two cases
+
+Education
+
+- Personas
+- Fix task
+- Good
+- Average
+- Bad Prompt
+
+- Entropy 3 Runs with Good Prompt
+
+Blog
+
+- Personas
+- Fix task
+- Good
+- Average
+- Bad Prompt
+
+- Entropy 3 Runs with Good Prompt
