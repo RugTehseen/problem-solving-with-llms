@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 """
 Emotional Valence Analyzer
 
@@ -135,10 +134,10 @@ def get_persona_rating(persona_name: str, persona_prompt: str, question: str, an
         
         # If no valid rating found, return a default
         print(f"  ⚠️ Could not extract rating from: '{content}'. Using default.")
-        return 5
+        return 1
     except Exception as e:
         print(f"  ❌ Error getting rating: {e}")
-        return 5  # Default rating on error
+        return 1  # Default rating on error
 
 def calculate_emotional_metrics(ratings: Dict[str, int]) -> Dict[str, float]:
     """
@@ -163,7 +162,7 @@ def calculate_emotional_metrics(ratings: Dict[str, int]) -> Dict[str, float]:
         "std_dev": std_dev
     }
 
-def truncate_strings(string_list):
+def truncate_names(string_list):
     result = []
     for s in string_list:
         if len(s) <= 7:
@@ -188,7 +187,7 @@ def visualize_results(ratings: Dict[str, int], metrics: Dict[str, float], questi
     sorted_items = sorted(ratings.items(), key=lambda x: x[1])
     personas = [item[0] for item in sorted_items]
     values = [item[1] for item in sorted_items]
-    xticks = truncate_strings(personas)
+    xticks = truncate_names(personas)
     
     # Plot 1: Bar chart of individual ratings
     colors = plt.cm.RdYlGn(np.array(values) / 10.0)  # Red to yellow to green color map
